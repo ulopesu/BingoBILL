@@ -110,6 +110,7 @@ contract Sorteio {
         for (uint i = 0; i < totalCartelasPremiadas; i++){
             Cartela memory cartela = cartelasPremiadas[i];
             (bool enviado, ) = payable(cartela.jogador).call{value: premio}("");
+            enviado = enviado;
         }
     }
 
@@ -152,6 +153,7 @@ contract BingoBILL {
         uint balance = address(this).balance;
         if(balance > 0) {
             (bool enviado, ) = payable(devPaiAddr).call{value: balance}("");
+            enviado = enviado;
             // console.log("Enviado: ", enviado);
         }
     }
