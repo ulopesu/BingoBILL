@@ -1,0 +1,26 @@
+{
+  "name": "bingobill",
+  "version": "1.0.0",
+  "description": "Aplicação irá funcionar como um jogo de bingo, com as seguintes características:\r     1 - Sorteio Automático;\r     2 - Sorteio a cada 5 minutos;\r     3 - Sorteio de 5 números entre 0 a 99;\r     4 - Peenchimento automático da cartela com 5 números aleatórios;\r     5 - Cartela com preço fixo;\r     6 - É permitida a compra de somente uma cartela por jogador em cada sorteio;\r     7 - Os jogadores ganhadores receberão, ao final de cada sorteio, o dividendo de todo o montante acumulado das cartelas vendidas;",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ulopesu/BingoBILL.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ulopesu/BingoBILL/issues"
+  },
+  "homepage": "https://github.com/ulopesu/BingoBILL#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "hardhat": "^2.12.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4"
+  }
+}

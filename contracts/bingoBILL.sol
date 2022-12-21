@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.9;
+
 import "hardhat/console.sol";
 
-
-pragma solidity ^0.8.0;
-
 uint constant qtd_nums = 5;
-uint256 constant valorCartela = 5;
+uint256 constant minValorCartela = 5;
 
 struct Cartela {        // Cartelas distríbuidas antes do sorteio
     uint id;
@@ -17,23 +16,28 @@ struct Cartela {        // Cartelas distríbuidas antes do sorteio
 }
 
 
-function sortearNum() view returns (uint) {
+function sortearNum(uint semente) view returns (uint) {
     // Resto da divisão por 100 do número do bloco atual 
     // + número em segundos da data e hora que o bloco foi fechado;
-    return uint((block.number + block.timestamp) % 100);
+    return uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty, semente))) % 100;
 }
 
 function sortearNums() view returns (uint[qtd_nums] memory) {
     // Realiza o sorteio de todos os números sem permitir repetições
+    // console.log("Numeros da Sorteados: ");
+
     uint[qtd_nums] memory nums;
+    uint semente = 0;
     for (uint i = 0; i < qtd_nums; i++) {
-        uint numSorteado = sortearNum();
+        uint numSorteado = sortearNum(semente);
+        // console.log(numSorteado);
         nums[i] = numSorteado;
         for (uint j = 0; j < i; j++) {
             if(numSorteado == nums[j]){
                 i--;    // Número Repetido, sorteia novamente;
             }
         }
+        semente++;
     }
     return nums;
 }
@@ -105,6 +109,7 @@ contract BingoBILL {
     mapping(uint => Sorteio) public sorteios;
     uint totalSorteios;
     uint totalCartelas;
+    string mssg = "Hello World!";
 
     constructor() {
         totalSorteios = 0;
@@ -113,35 +118,31 @@ contract BingoBILL {
     }
 
     function addSorteio() internal {
-        sorteios[totalSorteios] = new Sorteio(totalSorteios+1);
         totalSorteios++;
+        sorteios[totalSorteios] = new Sorteio(totalSorteios);
     }
 
-    event Received(address, uint);
+    modifier checkValor {
+        require(
+            msg.value >= minValorCartela,
+            "Valor abaixo do minimo!"
+        );
+        _;
+    }
 
-    function comprarCartela() external payable {
-        // require(msg.value == valorCartela, "Membro nao encontrado!");
-        console.log("0");
-
-        emit Received(msg.sender, msg.value);
-
-        console.log("1");
-
+    function comprarCartela() external payable checkValor {
+        uint[qtd_nums] memory nums_cartela = sortearNums();
         Cartela memory cartela = Cartela(
             totalCartelas+1,
             totalSorteios,
-            sortearNums(),
+            nums_cartela,
             msg.sender,
             false,
             true
         );
         totalCartelas++;
 
-        console.log("2");
-
-        Sorteio sorteio = sorteios[totalSorteios];
+        Sorteio sorteio = Sorteio(sorteios[totalSorteios]);
         sorteio.addCartela(cartela);
-
-        console.log("3");
     }
 }

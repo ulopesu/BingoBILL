@@ -1,4 +1,16 @@
-# BingoBILL
+# BingoBILL Hardhat Project
+
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+
+Try running some of the following tasks:
+
+```shell
+npx hardhat help
+npx hardhat test
+REPORT_GAS=true npx hardhat test
+npx hardhat node
+npx hardhat run scripts/deploy.ts
+```
 
 
 # Informações Gerais
@@ -20,13 +32,11 @@ Benefícios:
     3 - Maior agilidade entre cada sorteio em comparação com um jogo de bingo manual;
 
 
-
 ## Como (para que) você irá usar o conceito de Contract Factory?
 
 O conceito de Contract Factory será utilizado para fazer com que cada sorteio realizado seja um novo contrato, 
 dessa maneira cada rodada realizada ficará salva em um único contrato, garantindo uma independencia entre as rodadas, 
 o que também ajuda a mitigar possíveis erros da aplicação.
-
 
 
 ## Como (para que) você irá usar o conceito de Events?
