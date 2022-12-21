@@ -19,9 +19,34 @@ describe("BingoBILL", function () {
   it("ComprarCartela", async function () {
     const { contract, owner, otherAccount } = await loadFixture(deployFixture);
     const valorMinimo = 5;
-    await contract.comprarCartela({ value: ethers.utils.parseUnits(`${valorMinimo}`,'wei') });
-    const contractBalance = await ethers.provider.getBalance(contract.address);
-    expect(contractBalance).to.equal(valorMinimo);
+    const configValorPago = { value: ethers.utils.parseUnits(`${valorMinimo}`,'wei') };
+    await contract.comprarCartela(configValorPago);
+    await contract.comprarCartela(configValorPago);
+    const sorteio = await contract.getSorteioAtual();
+    const sorteioBalance = await ethers.provider.getBalance(sorteio);
+    expect(sorteioBalance).to.equal(valorMinimo*2);
+  });
+
+  it("getCartelasJogador", async function () {
+    const { contract, owner, otherAccount } = await loadFixture(deployFixture);
+
+    const valorMinimo = 5;
+    const configValorPago = { value: ethers.utils.parseUnits(`${valorMinimo}`,'wei') };
+    await contract.comprarCartela(configValorPago);
+    await contract.comprarCartela(configValorPago);
+
+    const cartelasJog = await contract.getCartelasJogador();
+
+    expect(cartelasJog.length).to.equal(2);
+  
+    console.log(cartelasJog);
+
+    // for (var i in cartelasJog) {
+    //   console.log(`\n\nCARTELA ${i}`);
+    //   var cartela = cartelasJog[i];
+    //   console.log(cartela);
+    // }
+
   });
 
 });

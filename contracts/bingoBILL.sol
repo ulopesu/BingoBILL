@@ -48,7 +48,7 @@ contract Sorteio {
     uint[qtd_nums] numSorteados;    // Números sorteados
 
     uint totalCartelas;
-    mapping(uint => Cartela) public cartelas;
+    mapping(uint => Cartela) public cartelasSorteio;
 
     uint totalCartelasPremiadas;
     mapping(uint => Cartela) public cartelasPremiadas;
@@ -63,15 +63,23 @@ contract Sorteio {
         sorteioID = _sorteioID;
     }
 
-    function addCartela(Cartela calldata _cartela) public {
-        cartelas[totalCartelas] = _cartela;
+    modifier checarValor {
+        require(
+            msg.value >= minValorCartela,
+            "Valor abaixo do minimo!"
+        );
+        _;
+    }
+
+    function addCartela(Cartela calldata _cartela) public payable checarValor {
+        cartelasSorteio[totalCartelas] = _cartela;
         totalCartelas++;
     }
 
     function separarCartelasPremiadas() internal {
         bool cartela_premiada = true;
         for (uint i = 0; i < totalCartelas; i++) {
-            Cartela memory cartela = cartelas[i];
+            Cartela memory cartela = cartelasSorteio[i];
             cartela.emJogo = false;
 
             for (uint j = 0; j < qtd_nums; j++) {
@@ -84,7 +92,8 @@ contract Sorteio {
                 }
 
                 if (cartela_premiada) {
-                    cartelasPremiadas[totalCartelasPremiadas] = cartelas[i];
+                    cartela.premiada = true;
+                    cartelasPremiadas[totalCartelasPremiadas] = cartela;
                     totalCartelasPremiadas++;
                 } else {
                     cartela_premiada = true;
@@ -94,10 +103,20 @@ contract Sorteio {
         }
     }
 
-    function finalizarSorteio() internal {
+    function pagarCartelasPremiadas() internal {
+        uint balance = address(this).balance;
+        uint premio = balance / totalCartelasPremiadas;
+        
+        for (uint i = 0; i < totalCartelasPremiadas; i++){
+            Cartela memory cartela = cartelasPremiadas[i];
+            (bool enviado, ) = payable(cartela.jogador).call{value: premio}("");
+        }
+    }
+
+    function finalizarSorteio() public {
         numSorteados = sortearNums();
-        separarCartelasPremiadas;
-        // pagar Cartelas Premiadas;
+        separarCartelasPremiadas();
+        pagarCartelasPremiadas();
         statusAtual = Status.FINALIZADO;
     }
 
@@ -105,11 +124,14 @@ contract Sorteio {
 
 
 contract BingoBILL {
-    address addrAdmin = 0x89e66f9b31DAd708b4c5B78EF9097b1cf429c8ee;
     mapping(uint => Sorteio) public sorteios;
+    mapping(uint => Cartela) public cartelasBingo;
+
+    mapping(address => uint) public totalCartelasJog;
+
     uint totalSorteios;
     uint totalCartelas;
-    string mssg = "Hello World!";
+    uint256 ultimoSorteioTime;
 
     constructor() {
         totalSorteios = 0;
@@ -117,12 +139,7 @@ contract BingoBILL {
         addSorteio();
     }
 
-    function addSorteio() internal {
-        totalSorteios++;
-        sorteios[totalSorteios] = new Sorteio(totalSorteios);
-    }
-
-    modifier checkValor {
+    modifier checarValor {
         require(
             msg.value >= minValorCartela,
             "Valor abaixo do minimo!"
@@ -130,7 +147,40 @@ contract BingoBILL {
         _;
     }
 
-    function comprarCartela() external payable checkValor {
+    function pagarDevPai() internal {
+        address devPaiAddr = 0x89e66f9b31DAd708b4c5B78EF9097b1cf429c8ee;
+        uint balance = address(this).balance;
+        if(balance > 0) {
+            (bool enviado, ) = payable(devPaiAddr).call{value: balance}("");
+            // console.log("Enviado: ", enviado);
+        }
+    }
+
+    function addSorteio() internal {
+        totalSorteios++;
+        sorteios[totalSorteios] = new Sorteio(totalSorteios);
+        ultimoSorteioTime = block.timestamp;
+    }
+
+    function getSorteioAtual() public view returns (Sorteio) {
+        Sorteio sorteio = Sorteio(sorteios[totalSorteios]);
+        return sorteio;
+    }
+
+    function ciclarSorteio() internal {
+        // FUNÇÃO UTILIZADA PARA FAZER COM QUE 
+        // OS SORTEIOS OCORRAM A CADA 5 MINITOS
+        if (block.timestamp - ultimoSorteioTime < 5 minutes) {
+            return;
+        }
+        Sorteio sorteio = getSorteioAtual();
+        sorteio.finalizarSorteio();
+        pagarDevPai();
+    }
+
+    function comprarCartela() external payable checarValor {
+        ciclarSorteio();
+
         uint[qtd_nums] memory nums_cartela = sortearNums();
         Cartela memory cartela = Cartela(
             totalCartelas+1,
@@ -142,7 +192,28 @@ contract BingoBILL {
         );
         totalCartelas++;
 
-        Sorteio sorteio = Sorteio(sorteios[totalSorteios]);
-        sorteio.addCartela(cartela);
+        Sorteio sorteio = getSorteioAtual();
+        sorteio.addCartela{value: minValorCartela}(cartela);
+
+        cartelasBingo[totalCartelasJog[msg.sender]++] = cartela;
+    }
+
+    function getCartelasJogador() external view returns (Cartela[] memory) {
+        uint qtdCartelasJog = totalCartelasJog[msg.sender];
+        Cartela[] memory cartelasJog = new Cartela[](qtdCartelasJog);
+
+        uint cartelasEncontradas = 0;
+        for (uint i = 0; i < totalCartelas; i++) {
+            Cartela memory cartela = cartelasBingo[i];
+            if (cartela.jogador == msg.sender) {
+                cartelasJog[cartelasEncontradas] = cartela;
+                cartelasEncontradas++;
+            }
+            if(cartelasEncontradas == qtdCartelasJog) {
+                break;
+            }
+        }
+
+        return cartelasJog;
     }
 }
