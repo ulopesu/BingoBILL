@@ -43,3 +43,19 @@ o que também ajuda a mitigar possíveis erros da aplicação.
 
 Os Events serão usados para interagir com a interface gráfica 
 noticando ao usuário as etapas do sorteio e o resultado do mesmo.
+
+
+
+
+
+
+## Caracteristícas da Aplicação Final
+    1 - Sorteio Automático;
+    2 - Um novo sorteio se inicia sempre que um jogador ganha, ou seja, compra uma cartela premiada;
+    3 - Combinação de cada sorteio 3 números distíntos entre 0 a 7;
+    4 - Peenchimento automático da cartela com 3 números aleatórios;
+    5 - Cartela com preço fixo (0,1 Goerli);
+    6 - Os jogadores podem comprar qualquer quantidade de cartelas a cada sorteio;
+    7 - Somente um jogador ganha a cada sorteio;
+    8 - A probabilidade de um jogador comprar a cartela premiada é 1/C(8,3) = 1/56;
+    9 - O jogador ganhador recebe o montante acumulado das cartelas vendidas menos a gorgeta do DevPai (+- 10%);

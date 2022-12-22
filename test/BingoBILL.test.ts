@@ -18,20 +18,21 @@ describe("BingoBILL", function () {
 
   it("ComprarCartela", async function () {
     const { contract, owner, otherAccount } = await loadFixture(deployFixture);
+    const valorPago = 10;
     const valorMinimo = 5;
-    const configValorPago = { value: ethers.utils.parseUnits(`${valorMinimo}`,'wei') };
+    const gorjetaDevPai = 1;
+    const configValorPago = { value: ethers.utils.parseUnits(`${valorPago}`,'wei') };
     await contract.comprarCartela(configValorPago);
     await contract.comprarCartela(configValorPago);
-    const sorteio = await contract.getSorteioAtual();
-    const sorteioBalance = await ethers.provider.getBalance(sorteio);
-    expect(sorteioBalance).to.equal(valorMinimo*2);
+    const sorteio = await contract.getSorteioAtualEXT();
+    expect(sorteio.balance).to.equal((valorMinimo-gorjetaDevPai)*2);
   });
 
   it("getCartelasJogador", async function () {
     const { contract, owner, otherAccount } = await loadFixture(deployFixture);
 
-    const valorMinimo = 5;
-    const configValorPago = { value: ethers.utils.parseUnits(`${valorMinimo}`,'wei') };
+    const valorPago = 10;
+    const configValorPago = { value: ethers.utils.parseUnits(`${valorPago}`,'wei') };
     await contract.comprarCartela(configValorPago);
     await contract.comprarCartela(configValorPago);
 
