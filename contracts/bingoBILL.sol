@@ -27,10 +27,10 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 }
 
 
-function sortearNum(uint semente) view returns (uint) {
+function sortearNum(uint semente, bool isCartela) view returns (uint) {
     // Resto da divisão por DIFICULDADE do número do bloco atual 
     // + número em segundos da data e hora que o bloco foi fechado;
-    return uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty, semente))) % dificuldade;
+    return uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
 }
 
 function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
@@ -53,14 +53,14 @@ function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] me
     return numSorteado;
 }
 
-function sortearNums() view returns (uint[qtd_nums] memory) {
+function sortearNums(bool isCartela) view returns (uint[qtd_nums] memory) {
     // Realiza o sorteio de todos os números sem permitir repetições
     // console.log("Numeros da Sorteados: ");
 
     uint[qtd_nums] memory nums;
     uint semente = 0;
     for (uint i = 0; i < qtd_nums; i++) {
-        uint numSorteado = sortearNum(semente);
+        uint numSorteado = sortearNum(semente, isCartela);
         // console.log(numSorteado);
         nums[i] = checkNumDuplicado(numSorteado, i, nums);
         semente++;
@@ -72,17 +72,16 @@ function sortearNums() view returns (uint[qtd_nums] memory) {
 contract Sorteio {
     address bingoAddr;
     uint sorteioID;
+    bool emJogo = true;             // Status do Sorteio;
     uint[qtd_nums] numSorteados;    // Números sorteados
 
-    uint totalCartelas = 0;
+    uint totalSorteioCartelas = 0;
     mapping(uint => Cartela) public cartelasSorteio;
-
-    bool emJogo = true;             // Status do Sorteio;
     
     constructor(address _bingoAddr, uint _sorteioID) {
         bingoAddr = _bingoAddr;
         sorteioID = _sorteioID;
-        numSorteados = sortearNums();
+        numSorteados = sortearNums(false);
     }
 
     modifier checarValor {
@@ -110,7 +109,7 @@ contract Sorteio {
     }
 
     function getTotalCartelas() view public returns (uint){
-        return totalCartelas;
+        return totalSorteioCartelas;
     }
 
     function getBalance() view public returns (uint){
@@ -118,26 +117,30 @@ contract Sorteio {
     }
 
     function addCartela(Cartela memory _cartela) public payable checarValor {
-        cartelasSorteio[totalCartelas] = _cartela;
-        totalCartelas++;
+        cartelasSorteio[totalSorteioCartelas] = _cartela;
+        totalSorteioCartelas++;
         checarCartelaPremiada(_cartela);
     }
 
     function checarCartelaPremiada(Cartela memory _cartela) internal {
         bool cartela_premiada = true;
+        bool num_encontrado = false;
 
         for (uint j = 0; j < qtd_nums; j++) {
             uint numeroSorteado = numSorteados[j];
-            for (uint k = 0; j < qtd_nums; k++) {
-                if(numeroSorteado != _cartela.numeros[j]) {
-                    cartela_premiada = false;
+
+            for (uint k = 0; k < qtd_nums; k++) {
+                if(numeroSorteado == _cartela.numeros[k]) {
+                    num_encontrado = true;
                     break;
                 }
             }
 
-            if (!cartela_premiada) {
+            if(!num_encontrado){
+                cartela_premiada = false;
                 break;
             }
+            num_encontrado = false;
         }
 
         if (cartela_premiada) {
@@ -150,6 +153,7 @@ contract Sorteio {
         uint premio = address(this).balance;
         (bool enviado, ) = payable(cartelaPremiada.jogador).call{value: premio}("");
         enviado = enviado;
+        emJogo = false;
     }
 }
 
@@ -195,13 +199,18 @@ contract BingoBILL {
         return enviado;
     }
 
-    function addSorteio() internal {
+    function addSorteio() internal returns (Sorteio) {
         totalSorteios++;
-        sorteios[totalSorteios] = new Sorteio(address(this), totalSorteios);
+        Sorteio sorteio = new Sorteio(address(this), totalSorteios);
+        sorteios[totalSorteios] = sorteio;
+        return sorteio;
     }
 
-    function getSorteioAtualINT() internal view returns (Sorteio) {
+    function getSorteioAtualINT() internal returns (Sorteio) {
         Sorteio sorteio = sorteios[totalSorteios];
+        if (!sorteio.getStatus()) {
+            sorteio = addSorteio();
+        }
         return sorteio;
     }
 
@@ -215,38 +224,23 @@ contract BingoBILL {
             sorteio.getTotalCartelas(),
             sorteio.getBalance()
         );
-
         return sorteioInfo;
     }
 
-    //  struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
-    //      address sorteioAddr;
-    //      uint sorteioID;
-    //      uint[qtd_nums] numSorteados;
-    //      bool emJogo;
-    //      uint totalCartelas;
-    //      uint balance;
-    //  }
-
     function comprarCartela() external payable checarValor {
-        uint[qtd_nums] memory nums_cartela = sortearNums();
+        Sorteio sorteio = getSorteioAtualINT();
+        totalCartelas++;
+        uint[qtd_nums] memory nums_cartela = sortearNums(true);
         Cartela memory cartela = Cartela(
-            totalCartelas+1,
+            totalCartelas,
             totalSorteios,
             nums_cartela,
             msg.sender,
             false
         );
-        totalCartelas++;
-
-        Sorteio sorteio = getSorteioAtualINT();
-        if (!sorteio.getStatus()){
-            addSorteio();
-            sorteio = getSorteioAtualINT();
-        }
-
-        sorteio.addCartela{value: minValorCartela - gorjetaDevPai}(cartela);
-        cartelasBingo[totalCartelasJog[msg.sender]++] = cartela;
+        sorteio.addCartela{value: (minValorCartela - gorjetaDevPai)}(cartela);
+        cartelasBingo[totalCartelas] = cartela;
+        totalCartelasJog[msg.sender]++;
     }
 
     function getCartelasJogador() external view returns (Cartela[] memory) {
@@ -254,7 +248,7 @@ contract BingoBILL {
         Cartela[] memory cartelasJog = new Cartela[](qtdCartelasJog);
 
         uint cartelasEncontradas = 0;
-        for (uint i = 0; i < totalCartelas; i++) {
+        for (uint i = 1; i <= totalCartelas; i++) {
             Cartela memory cartela = cartelasBingo[i];
             if (cartela.jogador == msg.sender) {
                 cartelasJog[cartelasEncontradas] = cartela;
@@ -269,4 +263,4 @@ contract BingoBILL {
     }
 }
 
-// ULTIMA VERSÃO CONTRATO REMIX: 0x9C0A474644bEA63A704cD5C93ca0429eA19EF5Bb
+// ULTIMA VERSÃO CONTRATO REMIX: 0x13D835D8E08Cb88c721E161C0E8eC7DbFBcDd6EF
