@@ -4,8 +4,8 @@ pragma solidity ^0.8.9;
 import "hardhat/console.sol";
 
 uint constant qtd_nums = 3;
-uint256 constant minValorCartela = 5;
-uint256 constant gorjetaDevPai = 1;
+uint256 constant minValorCartela = 50000000000000000;
+uint256 constant gorjetaDevPai = 10000000000000000;
 
 uint constant dificuldade = 8;
 
@@ -174,6 +174,8 @@ contract BingoBILL {
         addSorteio();
     }
 
+    event CompraCartelaLog(address indexed sender, string message);
+
     modifier checarValor {
         require(
             msg.value >= minValorCartela,
@@ -241,6 +243,7 @@ contract BingoBILL {
         sorteio.addCartela{value: (minValorCartela - gorjetaDevPai)}(cartela);
         cartelasBingo[totalCartelas] = cartela;
         totalCartelasJog[msg.sender]++;
+        emit CompraCartelaLog(msg.sender, "Cartela comprada com Sucesso!");
     }
 
     function getCartelasJogador() external view returns (Cartela[] memory) {

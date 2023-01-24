@@ -18,20 +18,29 @@ describe("BingoBILL", function () {
 
   it("ComprarCartela", async function () {
     const { contract, owner, otherAccount } = await loadFixture(deployFixture);
-    const valorPago = 10;
-    const valorMinimo = 5;
-    const gorjetaDevPai = 1;
-    const configValorPago = { value: ethers.utils.parseUnits(`${valorPago}`,'wei') };
+
+    // Pegar e imprimir o valor de contrato
+    // const provider = ethers.getDefaultProvider();
+    // let contract_balance = await provider.getBalance(contract.address);
+    // console.log(contract.address);
+    
+    const valorPago = 70000000;
+    const valorMinimo = BigInt("50000000000000000");
+    const gorjetaDevPai = BigInt("10000000000000000");
+    const configValorPago = { value: ethers.utils.parseUnits(`${valorPago}`,'gwei') };
+  
     await contract.comprarCartela(configValorPago);
     await contract.comprarCartela(configValorPago);
     const sorteio = await contract.getSorteioAtualEXT();
-    expect(sorteio.balance).to.equal((valorMinimo-gorjetaDevPai)*2);
+
+    console.log(sorteio.balance);
+    expect(sorteio.balance).to.equal((valorMinimo-gorjetaDevPai)*BigInt(2));
   });
 
   it("getCartelasJogador", async function () {
     const { contract, owner, otherAccount } = await loadFixture(deployFixture);
 
-    const valorPago = 10;
+    const valorPago = BigInt("499999999999999999");
     const configValorPago = { value: ethers.utils.parseUnits(`${valorPago}`,'wei') };
     await contract.comprarCartela(configValorPago);
     await contract.comprarCartela(configValorPago);
