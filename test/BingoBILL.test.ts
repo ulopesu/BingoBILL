@@ -38,7 +38,7 @@ describe("BingoBILL", function () {
 
     const cartelasJog = await contract.getCartelasJogador();
 
-    console.log(cartelasJog);
+    // console.log(cartelasJog);
 
     expect(cartelasJog.length).to.equal(2);
   });
