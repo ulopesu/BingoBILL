@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.17;
 
 import "hardhat/console.sol";
 
@@ -117,12 +117,11 @@ contract Sorteio {
     }
 
     function addCartela(Cartela memory _cartela) public payable checarValor {
-        cartelasSorteio[totalSorteioCartelas] = _cartela;
         totalSorteioCartelas++;
-        checarCartelaPremiada(_cartela);
+        cartelasSorteio[totalSorteioCartelas] = _cartela;
     }
 
-    function checarCartelaPremiada(Cartela memory _cartela) internal {
+    function checarCartelaPremiada(uint[qtd_nums] memory nums_cartela) view public returns (bool) {
         bool cartela_premiada = true;
         bool num_encontrado = false;
 
@@ -130,7 +129,7 @@ contract Sorteio {
             uint numeroSorteado = numSorteados[j];
 
             for (uint k = 0; k < qtd_nums; k++) {
-                if(numeroSorteado == _cartela.numeros[k]) {
+                if(numeroSorteado == nums_cartela[k]) {
                     num_encontrado = true;
                     break;
                 }
@@ -142,16 +141,15 @@ contract Sorteio {
             }
             num_encontrado = false;
         }
-
-        if (cartela_premiada) {
-            _cartela.premiada = true;
-            pagarCartelaPremiada(_cartela);
-        } 
+        return cartela_premiada;
     }
 
-    function pagarCartelaPremiada(Cartela memory cartelaPremiada) internal {
+    function pagarCartelaPremiada(Cartela memory cartela) public {
+        if (cartela.sorteioID != sorteioID || !emJogo || !cartela.premiada) {
+            return;
+        }
         uint premio = address(this).balance;
-        (bool enviado, ) = payable(cartelaPremiada.jogador).call{value: premio}("");
+        (bool enviado, ) = payable(cartela.jogador).call{value: premio}("");
         enviado = enviado;
         emJogo = false;
     }
@@ -233,14 +231,19 @@ contract BingoBILL {
         Sorteio sorteio = getSorteioAtualINT();
         totalCartelas++;
         uint[qtd_nums] memory nums_cartela = sortearNums(true);
+        bool is_premiada = sorteio.checarCartelaPremiada(nums_cartela);
         Cartela memory cartela = Cartela(
             totalCartelas,
             totalSorteios,
             nums_cartela,
             msg.sender,
-            false
+            is_premiada
         );
         sorteio.addCartela{value: (minValorCartela - gorjetaDevPai)}(cartela);
+        if (is_premiada) {
+            sorteio.pagarCartelaPremiada(cartela);
+            addSorteio();
+        }
         cartelasBingo[totalCartelas] = cartela;
         totalCartelasJog[msg.sender]++;
         emit CompraCartelaLog(msg.sender, "Cartela comprada com Sucesso!");
@@ -266,4 +269,4 @@ contract BingoBILL {
     }
 }
 
-// ULTIMA VERSÃO CONTRATO REMIX: 0x13D835D8E08Cb88c721E161C0E8eC7DbFBcDd6EF
+// ULTIMA VERSÃO CONTRATO REMIX: 0x1f46f788d955C4ccB54354fe72cBdD391949BC68
