@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "hardhat/console.sol";
+address constant devPaiAddr = 0x89e66f9b31DAd708b4c5B78EF9097b1cf429c8ee;
 
 uint constant qtd_nums = 3;
 uint256 constant minValorCartela = 50000000000000000;
@@ -30,14 +31,14 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 function sortearNum(uint semente, bool isCartela) view returns (uint) {
     // Resto da divisão por DIFICULDADE do número do bloco atual 
     // + número em segundos da data e hora que o bloco foi fechado;
-    return uint(keccak256(abi.encodePacked(block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
+    return uint(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
 }
 
 function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
     // Em caso de duplicação seta o numSorteado 
     // para o próximo ainda não sorteado, de forma cíclica
     bool reset = false;
-    for (uint j = 0; j < qtdSorteada; j++) {
+    for (uint j = 0; j <= qtdSorteada; j++) {
         if (reset) {
             j = 0;
             reset = false;
@@ -82,6 +83,14 @@ contract Sorteio {
         bingoAddr = _bingoAddr;
         sorteioID = _sorteioID;
         numSorteados = sortearNums(false);
+    }
+
+    modifier onlyDevPai {
+        require(
+            msg.sender == devPaiAddr,
+            "Permissao Negada!"
+        );
+        _;
     }
 
     modifier checarValor {
@@ -153,11 +162,14 @@ contract Sorteio {
         enviado = enviado;
         emJogo = false;
     }
+
+    function resortearNums() public onlyDevPai {
+        numSorteados = sortearNums(false);
+    }
 }
 
 
 contract BingoBILL {
-    address devPaiAddr = 0x89e66f9b31DAd708b4c5B78EF9097b1cf429c8ee;
     mapping(uint => Sorteio) public sorteios;
     mapping(uint => Cartela) public cartelasBingo;
 
@@ -264,9 +276,13 @@ contract BingoBILL {
                 break;
             }
         }
-
         return cartelasJog;
+    }
+
+    function resortearNums() external onlyDevPai {
+        Sorteio sorteio = sorteios[totalSorteios];
+        sorteio.resortearNums();
     }
 }
 
-// ULTIMA VERSÃO CONTRATO REMIX: 0x1f46f788d955C4ccB54354fe72cBdD391949BC68
+// ULTIMA VERSÃO CONTRATO REMIX: 0x7d4594Faab2cf874B10a2d034C380bC84EE0f191
