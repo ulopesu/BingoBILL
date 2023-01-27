@@ -253,14 +253,15 @@ contract BingoBILL {
             is_premiada
         );
         sorteio.addCartela{value: (minValorCartela - gorjetaDevPai)}(cartela);
-        if (is_premiada) {
-            sorteio.pagarCartelaPremiada(cartela);
-            addSorteio();
-            emit GanhadorLog(msg.sender, unicode"Parabéns, você ganhou!");
-        }
         cartelasBingo[totalCartelas] = cartela;
         totalCartelasJog[msg.sender]++;
-        emit CompraCartelaLog(msg.sender, "Cartela comprada com sucesso!");
+        if (!is_premiada) {
+            emit CompraCartelaLog(msg.sender, "Cartela comprada com sucesso!");
+            return;
+        }
+        sorteio.pagarCartelaPremiada(cartela);
+        addSorteio();
+        emit GanhadorLog(msg.sender, unicode"Parabéns, você ganhou!");
     }
 
     function getCartelasJogador() external view returns (Cartela[] memory) {
