@@ -31,7 +31,7 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 function sortearNum(uint semente, bool isCartela) view returns (uint) {
     // Resto da divisão por DIFICULDADE do número do bloco atual 
     // + número em segundos da data e hora que o bloco foi fechado;
-    return uint(keccak256(abi.encodePacked(msg.sender, gasleft(), semente, isCartela))) % dificuldade;
+    return uint(keccak256(abi.encodePacked(msg.sender, gasleft(), block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
 }
 
 function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
