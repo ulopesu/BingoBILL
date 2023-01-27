@@ -31,7 +31,7 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 function sortearNum(uint semente, bool isCartela) view returns (uint) {
     // Resto da divisão por DIFICULDADE do número do bloco atual 
     // + número em segundos da data e hora que o bloco foi fechado;
-    return uint(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
+    return uint(keccak256(abi.encodePacked(msg.sender, gasleft(), semente, isCartela))) % dificuldade;
 }
 
 function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
@@ -88,7 +88,7 @@ contract Sorteio {
     modifier onlyDevPai {
         require(
             msg.sender == devPaiAddr,
-            "Permissao Negada!"
+            unicode"Permissão Negada!"
         );
         _;
     }
@@ -96,7 +96,7 @@ contract Sorteio {
     modifier checarValor {
         require(
             msg.value >= minValorCartela - gorjetaDevPai,
-            "Valor abaixo do minimo!"
+            unicode"Valor abaixo do mínimo!"
         );
         _;
     }
@@ -185,11 +185,12 @@ contract BingoBILL {
     }
 
     event CompraCartelaLog(address indexed sender, string message);
+    event GanhadorLog(address indexed sender, string message);
 
     modifier checarValor {
         require(
             msg.value >= minValorCartela,
-            "Valor abaixo do minimo!"
+            unicode"Valor abaixo do mínimo!"
         );
         _;
     }
@@ -197,7 +198,7 @@ contract BingoBILL {
     modifier onlyDevPai {
         require(
             msg.sender == devPaiAddr,
-            "Permissao Negada!"
+            unicode"Permissão Negada!"
         );
         _;
     }
@@ -255,10 +256,11 @@ contract BingoBILL {
         if (is_premiada) {
             sorteio.pagarCartelaPremiada(cartela);
             addSorteio();
+            emit GanhadorLog(msg.sender, unicode"Parabéns, você ganhou!");
         }
         cartelasBingo[totalCartelas] = cartela;
         totalCartelasJog[msg.sender]++;
-        emit CompraCartelaLog(msg.sender, "Cartela comprada com Sucesso!");
+        emit CompraCartelaLog(msg.sender, "Cartela comprada com sucesso!");
     }
 
     function getCartelasJogador() external view returns (Cartela[] memory) {
