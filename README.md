@@ -1,35 +1,23 @@
-# BingoBILL Hardhat Project
-
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
-
+# BingoBILL
 
 # Informações Gerais
 
 ## Descreva o domínio da aplicação e o problema que a DApp visa resolver?
-
-Aplicação irá funcionar como um jogo de bingo, com as seguintes características:
     1 - Sorteio Automático;
-    2 - Sorteio a cada 5 minutos;
-    3 - Sorteio de 5 números entre 0 a 99;
-    4 - Peenchimento automático da cartela com 5 números aleatórios;
-    5 - Cartela com preço fixo;
-    6 - É permitida a compra de somente uma cartela por jogador em cada sorteio;
-    7 - Os jogadores ganhadores receberão, ao final de cada sorteio, o dividendo de todo o montante acumulado das cartelas vendidas;
+    2 - Um novo sorteio se inicia sempre que um jogador ganha, ou seja, compra uma cartela premiada;
+    3 - Cada sorteio possuí 3 números aleatórios entre 0 a 7;
+    4 - Cada cartela é preenchida com 3 números aleatórios entre 0 a 7;
+    4 - Uma cartela é considerada premiada se ela conter, em qualquer ordem, os 3 números do sorteio atual;
+    7 - Somente um jogador ganha a cada sorteio;
+    5 - As cartela tem um preço fixo (0,05 Goerli);
+    6 - Os jogadores podem comprar qualquer quantidade de cartelas antes que o sorteio acabe;
+    8 - A probabilidade de um jogador comprar a cartela premiada é 1/C(8,3) = 1/56;
+    9 - O jogador ganhador recebe o montante acumulado das cartelas vendidas menos a gorgeta do DevPai;
 
 Benefícios:
     1 - Facilidade de participar;
-    2 - Segurança contra trapaças e golpes, por parte de outros jogadores ou organização do bingo;
-    3 - Maior agilidade entre cada sorteio em comparação com um jogo de bingo manual;
+    2 - Segurança contra trapaças e golpes, por parte de outros jogadores ou organização do jogo;
+    3 - Maior agilidade entre cada sorteio em comparação com um jogo manual;
 
 
 ## Como (para que) você irá usar o conceito de Contract Factory?
@@ -45,17 +33,16 @@ Os Events serão usados para interagir com a interface gráfica
 noticando ao usuário as etapas do sorteio e o resultado do mesmo.
 
 
+# HARDHAT
 
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
 
+Try running some of the following tasks:
 
-
-## Caracteristícas da Aplicação Final
-    1 - Sorteio Automático;
-    2 - Um novo sorteio se inicia sempre que um jogador ganha, ou seja, compra uma cartela premiada;
-    3 - Combinação de cada sorteio 3 números distíntos entre 0 a 7;
-    4 - Peenchimento automático da cartela com 3 números aleatórios;
-    5 - Cartela com preço fixo (0,1 Goerli);
-    6 - Os jogadores podem comprar qualquer quantidade de cartelas a cada sorteio;
-    7 - Somente um jogador ganha a cada sorteio;
-    8 - A probabilidade de um jogador comprar a cartela premiada é 1/C(8,3) = 1/56;
-    9 - O jogador ganhador recebe o montante acumulado das cartelas vendidas menos a gorgeta do DevPai (+- 10%);
+```shell
+npx hardhat help
+npx hardhat test
+REPORT_GAS=true npx hardhat test
+npx hardhat node
+npx hardhat run scripts/deploy.ts
+```
