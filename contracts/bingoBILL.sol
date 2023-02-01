@@ -38,16 +38,16 @@ function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] me
     // para o próximo ainda não sorteado, de forma cíclica
     bool reset = false;
     for (uint j = 0; j <= qtdSorteada; j++) {
-        if (reset) {
-            j = 0;
-            reset = false;
-        }
         if(numSorteado == nums[j]){
             numSorteado++;
             if(numSorteado >= dificuldade) {
                 numSorteado = 0;
             }
             reset = true;
+        }
+        if (reset) {
+            j = 0;
+            reset = false;
         }
     }
     return numSorteado;
@@ -61,8 +61,10 @@ function sortearNums(uint sementeGlobal) view returns (uint[qtd_nums] memory) {
     uint semente = 0;
     for (uint i = 0; i < qtd_nums; i++) {
         uint numSorteado = sortearNum(semente, sementeGlobal);
-        // console.log(numSorteado);
-        nums[i] = checkNumDuplicado(numSorteado, i, nums);
+        if(i > 0) {
+            numSorteado = checkNumDuplicado(numSorteado, i, nums);
+        }
+        nums[i] = numSorteado;
         semente++;
     }
     return nums;
