@@ -3,15 +3,14 @@
 # Informações Gerais
 
 ## Descreva o domínio da aplicação e o problema que a DApp visa resolver?
-    1 - Sorteio Automático;
-    2 - Um novo sorteio se inicia sempre que um jogador ganha, ou seja, compra uma cartela premiada;
-    3 - Cada sorteio possuí 3 números aleatórios entre 0 a 7;
-    4 - Cada cartela é preenchida com 3 números aleatórios entre 0 a 7;
-    4 - Uma cartela é considerada premiada se ela conter, em qualquer ordem, os 3 números do sorteio atual;
-    7 - Somente um jogador ganha a cada sorteio;
-    5 - As cartela tem um preço fixo (0,05 Goerli);
-    6 - Os jogadores podem comprar qualquer quantidade de cartelas antes que o sorteio acabe;
-    8 - A probabilidade de um jogador comprar a cartela premiada é 1/C(8,3) = 1/56;
+    1 - Cada sorteio possuí 3 números aleatórios entre 0 a 7;
+    2 - Cada cartela também preenchida com 3 números aleatórios entre 0 a 7;
+    3 - Uma cartela é considerada premiada se ela conter, em qualquer ordem, os 3 números do sorteio atual;
+    4 - Um novo sorteio se inicia sempre que um jogador ganha, ou seja, compra uma cartela premiada;
+    5 - Somente um jogador ganha a cada sorteio;
+    6 - A probabilidade de um jogador comprar a cartela premiada é 1/C(8,3) = 1/56;
+    7 - Os jogadores podem comprar qualquer quantidade de cartelas antes que o sorteio acabe;
+    8 - As cartelas tem um preço fixo (0,05 Goerli);
     9 - O jogador ganhador recebe o montante acumulado das cartelas vendidas menos a gorgeta do DevPai;
 
 Benefícios:
