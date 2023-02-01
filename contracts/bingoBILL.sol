@@ -28,10 +28,9 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 }
 
 
-function sortearNum(uint semente, bool isCartela) view returns (uint) {
-    // Resto da divisão por DIFICULDADE do número do bloco atual 
-    // + número em segundos da data e hora que o bloco foi fechado;
-    return uint(keccak256(abi.encodePacked(msg.sender, gasleft(), block.timestamp, block.difficulty, semente, isCartela))) % dificuldade;
+function sortearNum(uint semente, uint sementeGlobal) view returns (uint) {
+    // Resto da divisão de um número pseudo-aleatório pela DIFICULDADE atual do jogo;
+    return uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, semente, sementeGlobal))) % dificuldade;
 }
 
 function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
@@ -54,14 +53,14 @@ function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] me
     return numSorteado;
 }
 
-function sortearNums(bool isCartela) view returns (uint[qtd_nums] memory) {
+function sortearNums(uint sementeGlobal) view returns (uint[qtd_nums] memory) {
     // Realiza o sorteio de todos os números sem permitir repetições
     // console.log("Numeros da Sorteados: ");
 
     uint[qtd_nums] memory nums;
     uint semente = 0;
     for (uint i = 0; i < qtd_nums; i++) {
-        uint numSorteado = sortearNum(semente, isCartela);
+        uint numSorteado = sortearNum(semente, sementeGlobal);
         // console.log(numSorteado);
         nums[i] = checkNumDuplicado(numSorteado, i, nums);
         semente++;
@@ -79,10 +78,10 @@ contract Sorteio {
     uint totalSorteioCartelas = 0;
     mapping(uint => Cartela) public cartelasSorteio;
     
-    constructor(address _bingoAddr, uint _sorteioID) {
+    constructor(address _bingoAddr, uint _sorteioID, uint totalCartelas) {
         bingoAddr = _bingoAddr;
         sorteioID = _sorteioID;
-        numSorteados = sortearNums(false);
+        numSorteados = sortearNums(_sorteioID+totalCartelas);
     }
 
     modifier onlyDevPai {
@@ -163,8 +162,8 @@ contract Sorteio {
         emJogo = false;
     }
 
-    function resortearNums() public onlyDevPai {
-        numSorteados = sortearNums(false);
+    function resortearNums(uint totalCartelas) public onlyDevPai {
+        numSorteados = sortearNums(totalCartelas);
     }
 }
 
@@ -173,7 +172,7 @@ contract BingoBILL {
     mapping(uint => Sorteio) public sorteios;
     mapping(uint => Cartela) public cartelasBingo;
 
-    mapping(address => uint) public totalCartelasJog;
+    mapping(address => uint) public totalCartelasJogador;
 
     uint totalSorteios;
     uint totalCartelas;
@@ -214,17 +213,13 @@ contract BingoBILL {
 
     function addSorteio() internal returns (Sorteio) {
         totalSorteios++;
-        Sorteio sorteio = new Sorteio(address(this), totalSorteios);
+        Sorteio sorteio = new Sorteio(address(this), totalSorteios, totalCartelas);
         sorteios[totalSorteios] = sorteio;
         return sorteio;
     }
 
-    function getSorteioAtualINT() internal returns (Sorteio) {
-        Sorteio sorteio = sorteios[totalSorteios];
-        if (!sorteio.getStatus()) {
-            sorteio = addSorteio();
-        }
-        return sorteio;
+    function getSorteioAtualINT() view internal returns (Sorteio) {
+        return sorteios[totalSorteios];
     }
 
     function getSorteioAtualEXT() external view returns (SorteioInfo memory) {
@@ -241,9 +236,9 @@ contract BingoBILL {
     }
 
     function comprarCartela() external payable checarValor {
-        Sorteio sorteio = getSorteioAtualINT();
         totalCartelas++;
-        uint[qtd_nums] memory nums_cartela = sortearNums(true);
+        Sorteio sorteio = getSorteioAtualINT();
+        uint[qtd_nums] memory nums_cartela = sortearNums(totalCartelas);
         bool is_premiada = sorteio.checarCartelaPremiada(nums_cartela);
         Cartela memory cartela = Cartela(
             totalCartelas,
@@ -254,7 +249,7 @@ contract BingoBILL {
         );
         sorteio.addCartela{value: (minValorCartela - gorjetaDevPai)}(cartela);
         cartelasBingo[totalCartelas] = cartela;
-        totalCartelasJog[msg.sender]++;
+        totalCartelasJogador[msg.sender]++;
         if (!is_premiada) {
             emit CompraCartelaLog(msg.sender, "Cartela comprada com sucesso!");
             return;
@@ -265,7 +260,7 @@ contract BingoBILL {
     }
 
     function getCartelasJogador() external view returns (Cartela[] memory) {
-        uint qtdCartelasJog = totalCartelasJog[msg.sender];
+        uint qtdCartelasJog = totalCartelasJogador[msg.sender];
         Cartela[] memory cartelasJog = new Cartela[](qtdCartelasJog);
 
         uint cartelasEncontradas = 0;
@@ -284,7 +279,7 @@ contract BingoBILL {
 
     function resortearNums() external onlyDevPai {
         Sorteio sorteio = sorteios[totalSorteios];
-        sorteio.resortearNums();
+        sorteio.resortearNums(totalCartelas);
     }
 }
 
