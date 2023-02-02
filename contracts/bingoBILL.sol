@@ -268,5 +268,3 @@ contract BingoBILL {
         sorteio.resortearNums(totalCartelas);
     }
 }
-
-// ULTIMA VERSÃO CONTRATO REMIX: 0x2dafF0395C5691c92Bb9022B8380E3203c16F1c7
