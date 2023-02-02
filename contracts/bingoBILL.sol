@@ -30,27 +30,7 @@ struct SorteioInfo {        // Cartelas distríbuidas antes do sorteio
 
 function sortearNum(uint semente, uint sementeGlobal) view returns (uint) {
     // Resto da divisão de um número pseudo-aleatório pela DIFICULDADE atual do jogo;
-    return uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, semente, sementeGlobal))) % dificuldade;
-}
-
-function checkNumDuplicado(uint numSorteado, uint qtdSorteada, uint[qtd_nums] memory nums) pure returns (uint) {
-    // Em caso de duplicação seta o numSorteado 
-    // para o próximo ainda não sorteado, de forma cíclica
-    bool reset = false;
-    for (uint j = 0; j <= qtdSorteada; j++) {
-        if(numSorteado == nums[j]){
-            numSorteado++;
-            if(numSorteado >= dificuldade) {
-                numSorteado = 0;
-            }
-            reset = true;
-        }
-        if (reset) {
-            j = 0;
-            reset = false;
-        }
-    }
-    return numSorteado;
+    return uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, semente, sementeGlobal))) % (dificuldade+1) -1;
 }
 
 function sortearNums(uint sementeGlobal) view returns (uint[qtd_nums] memory) {
@@ -61,8 +41,11 @@ function sortearNums(uint sementeGlobal) view returns (uint[qtd_nums] memory) {
     uint semente = 0;
     for (uint i = 0; i < qtd_nums; i++) {
         uint numSorteado = sortearNum(semente, sementeGlobal);
-        if(i > 0) {
-            numSorteado = checkNumDuplicado(numSorteado, i, nums);
+        for (uint j = 0; j < i; j++) {
+            if(numSorteado == nums[j]){
+                numSorteado = sortearNum(semente, sementeGlobal);
+                j=0;
+            }
         }
         nums[i] = numSorteado;
         semente++;
@@ -285,4 +268,4 @@ contract BingoBILL {
     }
 }
 
-// ULTIMA VERSÃO CONTRATO REMIX: 0xf067f30813830269Ab0fF9A42cD0cd9831a1901b
+// ULTIMA VERSÃO CONTRATO REMIX: 0x2dafF0395C5691c92Bb9022B8380E3203c16F1c7
